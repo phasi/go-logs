@@ -76,6 +76,46 @@ func TestFatal(t *testing.T) {
 	buf.Reset()
 }
 
+// tests debug log level with formatting
+func TestDebugFormatting(t *testing.T) {
+	logger.Debug("User %s has %d points", "John", 42)
+	output := buf.String()
+	if !strings.Contains(output, "User John has 42 points") {
+		t.Errorf("Expected 'User John has 42 points', got %v", output)
+	}
+	buf.Reset()
+}
+
+// tests info log level with formatting
+func TestInfoFormatting(t *testing.T) {
+	logger.Info("Processing request %d from %s", 123, "192.168.1.1")
+	output := buf.String()
+	if !strings.Contains(output, "Processing request 123 from 192.168.1.1") {
+		t.Errorf("Expected formatted message, got %v", output)
+	}
+	buf.Reset()
+}
+
+// tests warn log level with formatting
+func TestWarnFormatting(t *testing.T) {
+	logger.Warn("Memory usage at %.1f%% (threshold: %d%%)", 85.7, 80)
+	output := buf.String()
+	if !strings.Contains(output, "Memory usage at 85.7% (threshold: 80%)") {
+		t.Errorf("Expected formatted warning, got %v", output)
+	}
+	buf.Reset()
+}
+
+// tests error log level with formatting
+func TestErrorFormatting(t *testing.T) {
+	logger.Error("Connection failed to %s:%d - %v", "localhost", 5432, "timeout")
+	output := buf.String()
+	if !strings.Contains(output, "Connection failed to localhost:5432 - timeout") {
+		t.Errorf("Expected formatted error, got %v", output)
+	}
+	buf.Reset()
+}
+
 // test if log level filtering works
 func TestLogLevelFilter(t *testing.T) {
 	logger.SetLogLevel(INFO)

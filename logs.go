@@ -2,6 +2,7 @@ package gologs
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -71,27 +72,32 @@ func (l *Logger) log(level LogLevel, message interface{}) {
 }
 
 // Info logs an informational message.
-func (l *Logger) Info(message interface{}) {
+func (l *Logger) Info(format string, v ...any) {
+	message := fmt.Sprintf(format, v...)
 	l.log(INFO, message)
 }
 
 // Debug logs a debug message.
-func (l *Logger) Debug(message interface{}) {
+func (l *Logger) Debug(format string, v ...any) {
+	message := fmt.Sprintf(format, v...)
 	l.log(DEBUG, message)
 }
 
 // Warn logs a warning message.
-func (l *Logger) Warn(message interface{}) {
+func (l *Logger) Warn(format string, v ...any) {
+	message := fmt.Sprintf(format, v...)
 	l.log(WARN, message)
 }
 
 // Error logs an error message.
-func (l *Logger) Error(message interface{}) {
+func (l *Logger) Error(format string, v ...any) {
+	message := fmt.Sprintf(format, v...)
 	l.log(ERROR, message)
 }
 
 // Fatal logs a fatal message and exits the program.
-func (l *Logger) Fatal(message interface{}) {
+func (l *Logger) Fatal(format string, v ...any) {
+	message := fmt.Sprintf(format, v...)
 	l.log(FATAL, message)
 	os.Exit(1)
 }
