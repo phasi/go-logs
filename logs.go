@@ -1,0 +1,139 @@
+package gologs
+
+import (
+	"encoding/json"
+	"io"
+	"log"
+	"os"
+	"time"
+)
+
+// LogLevel represents the severity of a log message.
+type LogLevel int
+
+// Log levels.
+const (
+	DEBUG LogLevel = iota
+	INFO
+	WARN
+	ERROR
+	FATAL
+)
+
+// Logger represents a simple logger with different log levels.
+type Logger struct {
+	logLevel LogLevel
+	logger   *log.Logger
+	output   io.Writer
+}
+
+// NewLogger creates a new Logger instance with the given log level and output.
+func NewLogger(logLevel LogLevel, output io.Writer) *Logger {
+	return &Logger{
+		logLevel: logLevel,
+		logger:   log.New(output, "", 0),
+		output:   output,
+	}
+}
+
+// setLogLevel sets the log level for the logger.
+func (l *Logger) SetLogLevel(logLevel LogLevel) {
+	l.logLevel = logLevel
+}
+
+func (l *Logger) log(level LogLevel, message interface{}) {
+	if level < l.logLevel {
+		return
+	}
+
+	entry := LogEntry{
+		Level:     logLevelString(level),
+		Timestamp: time.Now(),
+		Message:   message,
+	}
+
+	entryJSON, err := json.Marshal(entry)
+	if err != nil {
+		log.Printf("Failed to marshal log entry: %v", err)
+		return
+	}
+
+	_, err = l.output.Write(entryJSON)
+	if err != nil {
+		log.Printf("Failed to write log entry: %v", err)
+		return
+	}
+
+	_, err = l.output.Write([]byte("\n"))
+	if err != nil {
+		log.Printf("Failed to write newline after log entry: %v", err)
+	}
+}
+
+// Info logs an informational message.
+func (l *Logger) Info(message interface{}) {
+	l.log(INFO, message)
+}
+
+// Debug logs a debug message.
+func (l *Logger) Debug(message interface{}) {
+	l.log(DEBUG, message)
+}
+
+// Warn logs a warning message.
+func (l *Logger) Warn(message interface{}) {
+	l.log(WARN, message)
+}
+
+// Error logs an error message.
+func (l *Logger) Error(message interface{}) {
+	l.log(ERROR, message)
+}
+
+// Fatal logs a fatal message and exits the program.
+func (l *Logger) Fatal(message interface{}) {
+	l.log(FATAL, message)
+	os.Exit(1)
+}
+
+// logLevelString converts a LogLevel to a string representation.
+func logLevelString(logLevel LogLevel) string {
+	switch logLevel {
+	case INFO:
+		return "INFO"
+	case DEBUG:
+		return "DEBUG"
+	case WARN:
+		return "WARN"
+	case ERROR:
+		return "ERROR"
+	case FATAL:
+		return "FATAL"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+// LogLevelFromString converts a string to a LogLevel.
+func LogLevelFromString(level string) LogLevel {
+	switch level {
+	case "INFO":
+		return INFO
+	case "DEBUG":
+		return DEBUG
+	case "WARN":
+		return WARN
+	case "ERROR":
+		return ERROR
+	case "FATAL":
+		return FATAL
+	default:
+		return DEBUG
+	}
+}
+
+type LogEntry struct {
+	Level     string      `json:"level"`
+	Timestamp time.Time   `json:"timestamp"`
+	Message   interface{} `json:"message"`
+}
