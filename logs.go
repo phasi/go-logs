@@ -102,6 +102,46 @@ func (l *Logger) Fatal(format string, v ...any) {
 	os.Exit(1)
 }
 
+// CustomLogEntry represents a log entry that can be chained with level methods
+type CustomLogEntry struct {
+	logger  *Logger
+	message interface{}
+}
+
+// Log accepts a message and returns a CustomLogEntry for method chaining
+func (l *Logger) Log(message interface{}) *CustomLogEntry {
+	return &CustomLogEntry{
+		logger:  l,
+		message: message,
+	}
+}
+
+// Info logs the message at INFO level
+func (c *CustomLogEntry) Info() {
+	c.logger.log(INFO, c.message)
+}
+
+// Debug logs the message at DEBUG level
+func (c *CustomLogEntry) Debug() {
+	c.logger.log(DEBUG, c.message)
+}
+
+// Warn logs the message at WARN level
+func (c *CustomLogEntry) Warn() {
+	c.logger.log(WARN, c.message)
+}
+
+// Error logs the message at ERROR level
+func (c *CustomLogEntry) Error() {
+	c.logger.log(ERROR, c.message)
+}
+
+// Fatal logs the message at FATAL level and exits the program
+func (c *CustomLogEntry) Fatal() {
+	c.logger.log(FATAL, c.message)
+	os.Exit(1)
+}
+
 // logLevelString converts a LogLevel to a string representation.
 func logLevelString(logLevel LogLevel) string {
 	switch logLevel {

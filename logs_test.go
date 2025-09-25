@@ -116,6 +116,60 @@ func TestErrorFormatting(t *testing.T) {
 	buf.Reset()
 }
 
+// tests custom log with method chaining
+func TestCustomLogChaining(t *testing.T) {
+	logger.Log("This is a custom info message").Info()
+	output := buf.String()
+	if !strings.Contains(output, "This is a custom info message") {
+		t.Errorf("Expected 'This is a custom info message', got %v", output)
+	}
+	if !strings.Contains(output, `"level":"INFO"`) {
+		t.Errorf("Expected INFO level in output, got %v", output)
+	}
+	buf.Reset()
+
+	// Test with different levels
+	logger.Log("Custom debug").Debug()
+	output = buf.String()
+	if !strings.Contains(output, `"level":"DEBUG"`) {
+		t.Errorf("Expected DEBUG level in output, got %v", output)
+	}
+	buf.Reset()
+
+	logger.Log("Custom warning").Warn()
+	output = buf.String()
+	if !strings.Contains(output, `"level":"WARN"`) {
+		t.Errorf("Expected WARN level in output, got %v", output)
+	}
+	buf.Reset()
+
+	logger.Log("Custom error").Error()
+	output = buf.String()
+	if !strings.Contains(output, `"level":"ERROR"`) {
+		t.Errorf("Expected ERROR level in output, got %v", output)
+	}
+	buf.Reset()
+}
+
+// tests custom log with complex objects
+func TestCustomLogComplexObjects(t *testing.T) {
+	complexObj := map[string]interface{}{
+		"user_id": 123,
+		"action":  "login",
+		"success": true,
+	}
+
+	logger.Log(complexObj).Info()
+	output := buf.String()
+	if !strings.Contains(output, `"user_id":123`) {
+		t.Errorf("Expected complex object in output, got %v", output)
+	}
+	if !strings.Contains(output, `"level":"INFO"`) {
+		t.Errorf("Expected INFO level in output, got %v", output)
+	}
+	buf.Reset()
+}
+
 // test if log level filtering works
 func TestLogLevelFilter(t *testing.T) {
 	logger.SetLogLevel(INFO)
