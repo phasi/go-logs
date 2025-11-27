@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"runtime"
+	"strings"
 	"time"
 )
 
@@ -23,17 +25,19 @@ const (
 
 // Logger represents a simple logger with different log levels.
 type Logger struct {
-	logLevel LogLevel
-	logger   *log.Logger
-	output   io.Writer
+	logLevel       LogLevel
+	logger         *log.Logger
+	output         io.Writer
+	showCallerInfo bool
 }
 
 // NewLogger creates a new Logger instance with the given log level and output.
 func NewLogger(logLevel LogLevel, output io.Writer) *Logger {
 	return &Logger{
-		logLevel: logLevel,
-		logger:   log.New(output, "", 0),
-		output:   output,
+		logLevel:       logLevel,
+		logger:         log.New(output, "", 0),
+		output:         output,
+		showCallerInfo: true,
 	}
 }
 
@@ -42,15 +46,32 @@ func (l *Logger) SetLogLevel(logLevel LogLevel) {
 	l.logLevel = logLevel
 }
 
+// SetShowSource sets whether to include source file and line number in logs.
+// Defaults to false.
+func (l *Logger) SetShowCallerInfo(show bool) {
+	l.showCallerInfo = show
+}
+
 func (l *Logger) log(level LogLevel, message interface{}) {
+
 	if level < l.logLevel {
 		return
 	}
-
 	entry := LogEntry{
 		Level:     logLevelString(level),
 		Timestamp: time.Now(),
-		Message:   message,
+		Data:      message,
+	}
+
+	// Include source file and line number if enabled
+	if l.showCallerInfo {
+		file, line, funcName := getCallerInfo(3)
+		if file != "?" {
+			entry.Source = fmt.Sprintf("%s:%d", file, line)
+			if funcName != "?" {
+				entry.Caller = funcName
+			}
+		}
 	}
 
 	entryJSON, err := json.Marshal(entry)
@@ -179,7 +200,30 @@ func LogLevelFromString(level string) LogLevel {
 }
 
 type LogEntry struct {
-	Level     string      `json:"level"`
-	Timestamp time.Time   `json:"timestamp"`
-	Message   interface{} `json:"message"`
+	Level     string      `json:"level,omitempty"`
+	Timestamp time.Time   `json:"timestamp,omitempty"`
+	Source    string      `json:"source,omitempty"`
+	Caller    string      `json:"caller,omitempty"`
+	Data      interface{} `json:"data"`
+}
+
+func shortFuncName(full string) string {
+	parts := strings.Split(full, "/")
+	last := parts[len(parts)-1]
+	return strings.Split(last, ".")[1] // after package name
+}
+
+func getCallerInfo(skip int) (file string, line int, funcName string) {
+	// pc = program counter
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		return "?", 0, "?"
+	}
+
+	fn := runtime.FuncForPC(pc)
+	if fn == nil {
+		return file, line, "?"
+	}
+
+	return file, line, shortFuncName(fn.Name())
 }

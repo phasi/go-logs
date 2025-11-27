@@ -130,6 +130,12 @@ logger.Error("This will be shown")   // Above WARN level
 logger.SetLogLevel(gologs.ERROR)  // Now only ERROR and FATAL will be logged
 ```
 
+### Disabling caller info
+
+```go
+logger.SetShowCaller(false)  // This will hide file name, line number and caller function name from log rows
+```
+
 ### Log Level String Conversion
 
 ```go

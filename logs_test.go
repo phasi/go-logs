@@ -2,6 +2,7 @@ package gologs
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -217,4 +218,10 @@ func TestLogLevelFromString(t *testing.T) {
 	if LogLevelFromString("FATAL") != FATAL {
 		t.Errorf("Expected Fatal, got %v", LogLevelFromString("FATAL"))
 	}
+}
+
+func TestPrintExampleLog(t *testing.T) {
+	stdoutLogger := NewLogger(DEBUG, os.Stdout)
+	stdoutLogger.Info("This is an example log message")
+	stdoutLogger.Log("This is a custom log entry with caller info").Debug()
 }
